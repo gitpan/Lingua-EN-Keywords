@@ -2,8 +2,6 @@ package Lingua::EN::Keywords;
 
 require 5.005_62;
 use strict;
-use Text::Sentence qw(split_sentences); 
-use Lingua::EN::Summarize;
 #use warnings;
 
 require Exporter;
@@ -12,7 +10,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(
 	keywords
 );
-our $VERSION = '1.2';
+our $VERSION = '1.3';
 
 my %dict;
 my $use_dict = 0;
@@ -63,22 +61,21 @@ sub keywords {
     my %keywords;
     my $text = shift;
     $text =~ s/\n/ /g;
-    $keywords{lc $_}++ for destop_sentence(summarize($text));
-    for (split_sentences($text)) {
-        for (destop_sentence($_)) {
+    # $keywords{lc $_}++ for destop_sentence(summarize($text));
+    $text =~ s/[\.!\?]//g;
+    for (destop_sentence($text)) {
+        $keywords{lc $_}++ ;
+
+        # Titlecaps words are big.
+        if ($_ eq ucfirst lc $_) {
             $keywords{lc $_}++ ;
-
-            # Titlecaps words are big.
-            if ($_ eq ucfirst lc $_) {
-                $keywords{lc $_}++ ;
-                $keywords{lc $_}++ if $use_dict and !exists $dict{$_}
-                and !exists $dict{lc $_}; # And bigger if they're not in dict.
-            }
-
-            # Allcaps words are big.
-            $keywords{lc $_}++ if /^[A-Z]+$/;
-
+            $keywords{lc $_}++ if $use_dict and !exists $dict{$_}
+            and !exists $dict{lc $_}; # And bigger if they're not in dict.
         }
+
+        # Allcaps words are big.
+        $keywords{lc $_}++ if /^[A-Z]+$/;
+
     }
     (sort {$keywords{$b} <=> $keywords{$a}} keys %keywords)[0..4];
 }
