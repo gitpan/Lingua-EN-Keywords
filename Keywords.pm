@@ -1,86 +1,41 @@
-package Lingua::EN::Keywords;
+package My::Tagger;
+@My::Tagger::ISA=qw(Lingua::EN::Tagger);
+my %known_stems;
+sub stem {
+    my ( $self, $word ) = @_;
+    return $word unless $self->{'stem'};
+    return $known_stems{ $word } if exists $known_stems{$word};
+    my $stemref = Lingua::Stem::En::stem( -words => [ $word ] );
 
-require 5.005_62;
-use strict;
-#use warnings;
-
-require Exporter;
-
-our @ISA = qw(Exporter);
-our @EXPORT = qw(
-	keywords
-);
-our $VERSION = '1.3';
-
-my %dict;
-my $use_dict = 0;
-local *IN;
-if (-e "/usr/share/dict/words" and open IN,"/usr/share/dict/words") {
-    $use_dict =1;
-    local $/="\n"; # Defensive.
-    while(<IN>) {
-        chomp; $dict{$_}++;
-    }
+    $known_stems{ $word } = $stemref->[0] if exists $stemref->[0];
 }
 
-my %isstop;
-$isstop{$_}++ for qw(
-a about above accordance according across actual added after against ahead all
-almost alone along also am among amongst an and and-or and/or anon another any
-are as at award away be because become becomes been before behind being below
-best better between beyond both but by can certain claim come comes
-coming completely comprises concerning consider considered considering
-consisting corresponding could de department der described desired despite
-discussion do does doesnt doing down dr du due during each either embodiment
-especially et few fig figs first for forward four fourth from further generally
-get give given giving good had has have having he her herein hers him his honor
-how however i if im in inside instead into invention is it items its just let
-lets little look looks made make makes making man many me means meet meets more
-most much must my near nearly next no not now of off on one only onto or other
-our out outside over overall own particularly per possibly preferably preferred
-present provide provided provides pt put really regarding relatively reprinted
-respectively said same second seen several she should shown since so so-called
-some spp studies study such suitable take taken takes taking than that the
-their them then there thereby therefore therefrom thereof thereto these they
-third this those three through throughout thus to together too toward towards
-two under undergoing up upon upward us use various versus very via vol vols vs
-was way ways we were what whats when where whereby wherein which while whither
-who whom whos whose why will with within without woman would yes yet you your
-);
-
-sub destop_sentence {
-    my $sentence = shift;
-    $sentence =~ s/[^a-zA-Z]+/ /g;
-    grep { #!/'/ and 
-           length > 2 and 
-           !exists $isstop{lc($_)} 
-         } split /\s+/, $sentence;
-}
-
-sub keywords {
-    my %keywords;
-    my $text = shift;
-    $text =~ s/\n/ /g;
-    # $keywords{lc $_}++ for destop_sentence(summarize($text));
-    $text =~ s/[\.!\?]//g;
-    for (destop_sentence($text)) {
-        $keywords{lc $_}++ ;
-
-        # Titlecaps words are big.
-        if ($_ eq ucfirst lc $_) {
-            $keywords{lc $_}++ ;
-            $keywords{lc $_}++ if $use_dict and !exists $dict{$_}
-            and !exists $dict{lc $_}; # And bigger if they're not in dict.
-        }
-
-        # Allcaps words are big.
-        $keywords{lc $_}++ if /^[A-Z]+$/;
-
-    }
-    (sort {$keywords{$b} <=> $keywords{$a}} keys %keywords)[0..4];
-}
+sub stems { reverse %known_stems; }
 
 # To test:
+package Lingua::EN::Keywords;
+use Lingua::EN::Tagger;
+require 5.005_62;
+use strict;
+use warnings;
+
+my $t = My::Tagger->new(longest_noun_phrase => 5,weight_noun_phrases=>0);
+
+require Exporter;
+our @ISA = qw(Exporter);
+our @EXPORT = qw( keywords);
+our $VERSION = '2.0';
+sub keywords {
+    my %wl = $t->get_words(shift);
+    my %newwl; 
+    $newwl{unstem($_)} += $wl{$_} for keys %wl;
+    return (sort { $newwl{$b} <=> $newwl{$a} } keys %newwl)[0..5];
+}
+sub unstem {
+    my %cache = $t->stems;
+    my $word = shift;
+    return $cache{$word} || $word;
+}
 #undef $/;
 #my $in = <STDIN>;
 #print ((join " ", ((),keywords($in))),"\n");
