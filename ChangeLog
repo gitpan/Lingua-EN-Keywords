@@ -1,0 +1,9 @@
+2002-12-11 10:40  simon
+
+	* Keywords.pm, test.pl: Tweak algorithm a little.
+
+2002-09-01 19:06  simon
+
+	* Changes, Keywords.pm, MANIFEST, Makefile.PL, test.pl: Bring T::S
+	under version control.
+

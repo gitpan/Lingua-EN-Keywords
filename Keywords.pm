@@ -12,7 +12,18 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(
 	keywords
 );
-our $VERSION = '1.0';
+our $VERSION = '1.1';
+
+my %dict;
+my $use_dict = 0;
+local *IN;
+if (-e "/usr/share/dict/words" and open IN,"/usr/share/dict/words") {
+    $use_dict =1;
+    local $/="\n"; # Defensive.
+    while(<IN>) {
+        chomp; $dict{$_}++;
+    }
+}
 
 my %isstop;
 $isstop{$_}++ for qw(
@@ -54,7 +65,20 @@ sub keywords {
     $text =~ s/\n/ /g;
     $keywords{lc $_}++ for destop_sentence(summarize($text));
     for (split_sentences($text)) {
-        $keywords{lc $_}++ for destop_sentence($_);
+        for (destop_sentence($_)) {
+            $keywords{lc $_}++ ;
+
+            # Titlecaps words are big.
+            if ($_ eq ucfirst lc $_) {
+                $keywords{lc $_}++ ;
+                $keywords{lc $_}++ if $use_dict and !exists $dict{$_}
+                and !exists $dict{lc $_}; # And bigger if they're not in dict.
+            }
+
+            # Allcaps words are big.
+            $keywords{lc $_}++ if /^[A-Z]+$/;
+
+        }
     }
     (sort {$keywords{$b} <=> $keywords{$a}} keys %keywords)[0..4];
 }
