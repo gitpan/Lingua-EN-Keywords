@@ -12,7 +12,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(
 	keywords
 );
-our $VERSION = '0.01';
+our $VERSION = '1.0';
 
 my %isstop;
 $isstop{$_}++ for qw(
