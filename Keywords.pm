@@ -12,7 +12,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(
 	keywords
 );
-our $VERSION = '1.1';
+our $VERSION = '1.2';
 
 my %dict;
 my $use_dict = 0;

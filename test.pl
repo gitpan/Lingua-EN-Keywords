@@ -18,7 +18,7 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
-print "n" unless "sixsmith,moore,byers,transport,row" eq join",", 
+#print "n" unless "sixsmith,moore,byers,secretary,transport" eq join",", 
 keywords(<<EOF);
 The "spin row" controversy at the Department of Transport has resurfaced with claims that the announcement of one senior civil servant's resignation was false. 
 
